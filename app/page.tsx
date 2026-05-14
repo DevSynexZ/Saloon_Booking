@@ -1,13 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-
+import Navbar from "@/components/Navbar";
 export default function Home() {
   return (
+    
     <main className="min-h-screen bg-zinc-50 text-zinc-950 selection:bg-[#d4af37] selection:text-white">
       {/* Hero Section */}
       <section className="relative h-screen min-h-[700px] w-full flex items-center justify-center overflow-hidden bg-zinc-950 text-white">
         {/* Background Image Container */}
+              <Navbar />
+
         <div className="absolute inset-0 z-0">
           <Image
             src="/bg.png"
@@ -28,7 +31,7 @@ export default function Home() {
             Est. 2026 • The Art of Grooming
           </span>
           <h1 className="text-5xl sm:text-7xl md:text-9xl font-serif text-[#d4af37] mb-8 drop-shadow-2xl">
-            Sailor's Haircut
+            SAILOR'S
           </h1>
           <p className="text-xs md:text-sm tracking-[0.3em] md:tracking-[0.5em] text-zinc-400 uppercase mb-12 max-w-2xl mx-auto leading-loose">
             Premium Grooming Studio <span className="mx-2 text-[#d4af37]">•</span> Bashundhara R/A

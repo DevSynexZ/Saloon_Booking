@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "./providers"; // We will create this file
 
 const inter = Inter({ 
   subsets: ["latin"], 
@@ -27,7 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${inter.variable} ${playfair.variable} font-sans bg-[#f5efe0] text-zinc-900 antialiased`}>
-        {children}
+       
+       <Providers>{children}</Providers> 
         {/* Sonner Toaster for "Booking Confirmed" or "Error" messages */}
         <Toaster position="top-center" richColors />
       </body>

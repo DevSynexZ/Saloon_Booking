@@ -1,6 +1,7 @@
 {
   "name": "saloon_booking_system",
   "version": "0.1.0",
+
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -21,6 +22,7 @@
     "next": "16.2.4",
     "next-auth": "^4.24.14",
     "next-themes": "^0.4.6",
+    "nodemailer": "^7.0.13",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-day-picker": "^9.14.0",
@@ -34,11 +36,29 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevSynexZ/Saloon_Booking.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/DevSynexZ/Saloon_Booking/issues"
+  },
+  "homepage": "https://github.com/DevSynexZ/Saloon_Booking#readme"
 }

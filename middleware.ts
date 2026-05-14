@@ -1,23 +1,29 @@
 import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
-export default withAuth({
-  callbacks: {
-    authorized: ({ token, req }) => {
-      // Admin-only protection
-      if (req.nextUrl.pathname.startsWith("/admin")) {
-        return token?.role === "admin"; //
-      }
-      // General protection for other matched routes
-      return !!token;
+export default withAuth(
+  function middleware(req) {
+    // This function runs after 'authorized' returns true
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        // 1. Admin-only protection
+        if (req.nextUrl.pathname.startsWith("/admin")) {
+          return token?.role === "admin"; 
+        }
+        // 2. Protect /book for any logged-in user
+        return !!token;
+      },
     },
-  },
-  pages: {
-    signIn: "/signup",
-  },
-});
+    pages: {
+      signIn: "/signup", // Redirects here if not authorized
+    },
+  }
+);
 
 export const config = { 
-  // This ensures only /admin and /book are protected. 
-  // /api/bookings/check will remain public and accessible to your fetch call.
+  // Ensures only these routes trigger the middleware
   matcher: ["/admin/:path*", "/book/:path*"] 
 };

@@ -9,6 +9,7 @@ import { SlotPicker } from "@/components/booking/SlotPicker";
 import { Button } from "@/components/ui/button";
 import { salonMenu, Service } from "@/config/services";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 export default function BookingClient() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -18,6 +19,8 @@ export default function BookingClient() {
   const [activeCategory, setActiveCategory] = useState(salonMenu[0].category);
   const [showPayment, setShowPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // Added loading state
+  const { data: session } = useSession();
 
   const totalPrice = selectedServices.reduce((sum, service) => sum + service.price, 0);
   const depositAmount = (totalPrice * 0.4).toFixed(0);
@@ -30,46 +33,87 @@ export default function BookingClient() {
     setShowPayment(false);
   };
 
+  // FULL INTEGRATED BKASH LOGIC
+  const handlePayAndBook = async () => {
+    setLoading(true);
+    try {
+      // 1. Create a "Pending" record in your DB to get an ID
+      const initRes = await fetch("/api/bookings", { // Check if this matches your existing route
+        method: "POST",
+        body: JSON.stringify({ 
+          services: selectedServices.map(s => s.name), 
+          date: date ? format(date, "yyyy-MM-dd") : "", 
+          slot: selectedSlot,
+          amount: totalPrice,
+          deposit: depositAmount 
+        })
+      });
+      const { appointmentId } = await initRes.json();
+
+      // 2. Initiate bKash redirect
+      const res = await fetch("/api/payment/bkash/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: depositAmount, appointmentId })
+      });
+      
+      const data = await res.json();
+      if (data.bkashURL) {
+        window.location.href = data.bkashURL; 
+      }
+    } catch (err) {
+      alert("Failed to initiate payment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="w-full min-h-screen bg-white">
-      <div className="flex flex-col gap-10 w-full">
-        
-        {/* SECTION 1 & 2: Calendar and Slot Picker (Side-by-Side on Desktop) */}
-        <div className="grid lg:grid-cols-2 gap-6 w-full">
-          <section className="bg-zinc-50/50 border border-zinc-100 rounded-[2rem] p-4 md:p-8 flex flex-col items-center">
-            <h3 className="text-lg font-black uppercase mb-6 flex items-center gap-2 self-start">
-              <Icons.Calendar className="w-5 h-5 text-[#2d3a35]" /> 1. Date
+    <div className="w-full min-h-screen bg-white p-4 md:p-6">
+      <header className="mb-6 flex flex-col gap-1">
+        <span className="text-[#d4af37] text-[10px] font-black uppercase tracking-[0.4em]">
+          Ready for your transformation?
+        </span>
+        <h2 className="text-3xl font-black text-[#2d3a35] uppercase tracking-tighter">
+          Welcome, {session?.user?.name || "Guest"}
+        </h2>
+      </header>
+
+      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-4 w-full">
+          <section className="bg-zinc-50/50 border border-zinc-100 rounded-lg p-5 flex flex-col items-center">
+            <h3 className="text-sm font-black uppercase mb-4 flex items-center gap-2 self-start">
+              <Icons.Calendar className="w-4 h-4 text-[#2d3a35]" /> 1. Date
             </h3>
             <Calendar
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="rounded-2xl border border-zinc-200 p-2 bg-white shadow-sm"
+              className="rounded-lg border border-zinc-200 p-2 bg-white shadow-sm"
               disabled={(date) => date < new Date() || date.getDay() === 0}
             />
           </section>
 
-          <section className="bg-zinc-50/50 border border-zinc-100 rounded-[2rem] p-4 md:p-8">
-            <h3 className="text-lg font-black uppercase mb-6 flex items-center gap-2">
-              <Icons.Clock className="w-5 h-5 text-[#2d3a35]" /> 2. Time
+          <section className="bg-zinc-50/50 border border-zinc-100 rounded-lg p-5">
+            <h3 className="text-sm font-black uppercase mb-4 flex items-center gap-2">
+              <Icons.Clock className="w-4 h-4 text-[#2d3a35]" /> 2. Time
             </h3>
             <SlotPicker selectedSlot={selectedSlot} bookedSlots={bookedSlots} onSelect={setSelectedSlot} />
           </section>
         </div>
 
-        {/* SECTION 3: Service Menu (Always Full Width) */}
-        <section className="w-full space-y-6">
-          <h3 className="text-lg font-black uppercase flex items-center gap-2">
-            <Icons.Scissors className="w-5 h-5 text-[#2d3a35]" /> 3. Services
+        <section className="w-full space-y-4">
+          <h3 className="text-sm font-black uppercase flex items-center gap-2">
+            <Icons.Scissors className="w-4 h-4 text-[#2d3a35]" /> 3. Services
           </h3>
           
-          <div className="flex bg-zinc-100 p-1.5 gap-2 rounded-2xl overflow-x-auto no-scrollbar w-full">
+          <div className="flex bg-zinc-100 p-1 gap-1 rounded-lg overflow-x-auto no-scrollbar w-full">
             {salonMenu.map((cat) => (
               <button
                 key={cat.category}
                 onClick={() => setActiveCategory(cat.category)}
                 className={cn(
-                  "flex-1 px-6 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-[120px]",
+                  "flex-1 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-[100px]",
                   activeCategory === cat.category ? "bg-white text-[#2d3a35] shadow-sm" : "text-zinc-400"
                 )}
               >
@@ -81,9 +125,9 @@ export default function BookingClient() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCategory}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 w-full"
             >
               {salonMenu.find(c => c.category === activeCategory)?.services.map((service) => {
                 const isSelected = selectedServices.some(s => s.id === service.id);
@@ -92,7 +136,7 @@ export default function BookingClient() {
                     key={service.id}
                     onClick={() => handleServiceChange(service)}
                     className={cn(
-                      "relative h-36 rounded-3xl overflow-hidden cursor-pointer border-2 transition-all group w-full",
+                      "relative h-28 rounded-lg overflow-hidden cursor-pointer border-2 transition-all group w-full",
                       isSelected ? "border-[#d4af37]" : "border-transparent"
                     )}
                   >
@@ -101,20 +145,19 @@ export default function BookingClient() {
                       className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" 
                       alt={service.name}
                     />
-                    <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors" />
+                    <div className="absolute inset-0 bg-black/50" />
                     
                     {isSelected && (
-                      <div className="absolute top-3 left-3 bg-[#d4af37] p-1.5 rounded-full z-20 shadow-lg">
-                        <Icons.Check className="w-4 h-4 text-white" strokeWidth={4} />
+                      <div className="absolute top-2 left-2 bg-[#d4af37] p-1 rounded-full z-20 shadow-lg">
+                        <Icons.Check className="w-3 h-3 text-white" strokeWidth={4} />
                       </div>
                     )}
 
-                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                    <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
                       <div className="flex flex-col">
-                        <span className="text-white text-[10px] font-bold uppercase opacity-70">Service</span>
-                        <span className="text-white text-sm font-black uppercase tracking-wider">{service.name}</span>
+                        <span className="text-white text-[10px] font-black uppercase tracking-wider">{service.name}</span>
                       </div>
-                      <span className="text-white font-black text-lg">৳{service.price}</span>
+                      <span className="text-white font-black text-sm">৳{service.price}</span>
                     </div>
                   </div>
                 );
@@ -123,77 +166,72 @@ export default function BookingClient() {
           </AnimatePresence>
         </section>
 
-        {/* SECTION 4: Checkout Summary (Always Below Service Menu) */}
         <div className="w-full">
-          <div className="bg-zinc-900 rounded-[2.5rem] p-6 md:p-10 text-white shadow-2xl w-full border border-zinc-800">
-            <h3 className="text-xs font-black text-[#d4af37] uppercase tracking-[0.3em] mb-8 text-center lg:text-left">
-              Final Appointment Summary
-            </h3>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8 border-b border-white/10">
-              {/* Date/Time info */}
-              <div className="space-y-4">
+          <div className="bg-zinc-900 rounded-lg p-6 text-white shadow-xl w-full border border-zinc-800">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Schedule</p>
-                <div className="flex items-center gap-4">
-                  <div className="bg-white/10 p-3 rounded-2xl"><Icons.Calendar className="w-5 h-5 text-[#d4af37]" /></div>
-                  <p className="font-bold">{date ? format(date, "EEEE, MMMM do") : "Not set"}</p>
+                <div className="flex items-center gap-3 text-sm">
+                  <Icons.Calendar className="w-4 h-4 text-[#d4af37]" />
+                  <p className="font-bold">{date ? format(date, "MMM do, yyyy") : "Not set"}</p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="bg-white/10 p-3 rounded-2xl"><Icons.Clock className="w-5 h-5 text-[#d4af37]" /></div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Icons.Clock className="w-4 h-4 text-[#d4af37]" />
                   <p className="font-bold">{selectedSlot || "Time not selected"}</p>
                 </div>
               </div>
 
-              {/* Service List Info */}
-              <div className="space-y-4 md:border-l md:pl-8 border-white/10">
-                <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Selected Items</p>
-                <div className="space-y-3">
+              <div className="space-y-3 md:border-l md:pl-6 border-white/10">
+                <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Selected Services</p>
+                <div className="max-h-24 overflow-y-auto pr-2 space-y-2">
                   {selectedServices.length > 0 ? (
                     selectedServices.map(s => (
-                      <div key={s.id} className="flex justify-between items-center text-sm bg-white/5 p-2 rounded-lg">
-                        <span className="font-medium text-zinc-300">{s.name}</span>
+                      <div key={s.id} className="flex justify-between items-center text-xs bg-white/5 p-2 rounded">
+                        <span className="text-zinc-300">{s.name}</span>
                         <span className="font-black text-[#d4af37]">৳{s.price}</span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs italic text-zinc-500">Please pick a service above</p>
+                    <p className="text-xs italic text-zinc-500">Pick a service to continue</p>
                   )}
                 </div>
               </div>
 
-              {/* Total and Actions */}
-              <div className="space-y-6 lg:border-l lg:pl-8 border-white/10 flex flex-col justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-2">Grand Total</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black">৳{totalPrice}</span>
-                  </div>
+              <div className="lg:border-l lg:pl-6 border-white/10 flex flex-col justify-end">
+                <div className="mb-4">
+                  <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Total</p>
+                  <span className="text-4xl font-black tracking-tighter">৳{totalPrice}</span>
                 </div>
 
                 {!showPayment ? (
                   <Button
                     onClick={() => setShowPayment(true)}
                     disabled={!selectedSlot || selectedServices.length === 0}
-                    className="w-full bg-[#d4af37] hover:bg-white hover:text-black text-zinc-900 h-16 rounded-2xl text-lg font-black transition-all uppercase shadow-[0_10px_20px_-10px_rgba(212,175,55,0.4)]"
+                    className="w-full bg-[#d4af37] hover:bg-white hover:text-black text-zinc-900 h-12 rounded-md text-xs font-black transition-all uppercase"
                   >
-                    Confirm & Pay Deposit
+                    Confirm Appointment
                   </Button>
                 ) : (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex justify-between items-center">
-                      <p className="text-xs font-bold text-[#d4af37] uppercase">40% Booking Deposit</p>
-                      <p className="text-xl font-black">৳{depositAmount}</p>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+                    <div className="bg-white/5 p-3 rounded-md border border-white/10 flex justify-between items-center">
+                      <p className="text-[10px] font-bold text-[#d4af37] uppercase">Deposit (40%)</p>
+                      <p className="text-lg font-black">৳{depositAmount}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button onClick={() => setPaymentMethod('bkash')} className={cn("h-14 rounded-2xl border-2 flex items-center justify-center transition-all bg-white/5", paymentMethod === 'bkash' ? "border-[#d4af37] scale-105" : "border-white/5 grayscale opacity-50")}>
-                        <img src="https://logolook.net/wp-content/uploads/2023/07/bKash-Logo.png" className="h-4" alt="bkash" />
-                      </button>
-                      <button onClick={() => setPaymentMethod('nagad')} className={cn("h-14 rounded-2xl border-2 flex items-center justify-center transition-all bg-white/5", paymentMethod === 'nagad' ? "border-[#d4af37] scale-105" : "border-white/5 grayscale opacity-50")}>
-                        <img src="https://seeklogo.com/images/N/nagad-logo-7A70BA66AD-seeklogo.com.png" className="h-5" alt="nagad" />
+                    <div className="grid grid-cols-1 gap-2">
+                      <button 
+                        onClick={() => setPaymentMethod('bkash')} 
+                        className={cn("h-10 rounded-md border flex items-center justify-center transition-all bg-white/5", 
+                        paymentMethod === 'bkash' ? "border-[#d4af37]" : "border-white/5 opacity-40")}
+                      >
+                        <img src="https://logolook.net/wp-content/uploads/2023/07/bKash-Logo.png" className="h-3" alt="bkash" />
                       </button>
                     </div>
-                    <Button disabled={!paymentMethod} className="w-full h-14 bg-white text-black font-black rounded-2xl uppercase hover:bg-[#d4af37] transition-colors">
-                      Finalize Payment
+                    <Button 
+                      disabled={!paymentMethod || loading} 
+                      onClick={handlePayAndBook}
+                      className="w-full h-10 bg-white text-black font-black rounded-md text-xs uppercase hover:bg-[#d4af37]"
+                    >
+                      {loading ? "Processing..." : "Pay & Book"}
                     </Button>
                   </motion.div>
                 )}
