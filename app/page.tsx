@@ -36,7 +36,7 @@ export default function Home() {
           <p className="text-xs md:text-sm tracking-[0.3em] md:tracking-[0.5em] text-zinc-400 uppercase mb-12 max-w-2xl mx-auto leading-loose">
             Premium Grooming Studio <span className="mx-2 text-[#d4af37]">•</span> Bashundhara R/A
           </p>
-          <Link href="/book">
+          <Link href="/auth">
             <Button 
               size="lg" 
               className="bg-[#d4af37] hover:bg-[#b8962d] text-zinc-950 rounded-none px-10 py-8 text-base md:text-lg font-bold tracking-widest transition-all duration-500 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)]"
