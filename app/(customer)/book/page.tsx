@@ -2,7 +2,7 @@ import dbConnect from '@/lib/db';
 import BookingClient from './BookingClient';
 
 export default async function BookingPage() {
-  await dbConnect();
+  // await dbConnect();
   
   return (
     <main className="min-h-screen bg-[#fdfaf5] py-6 md:py-12">

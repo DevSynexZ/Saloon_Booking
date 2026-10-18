@@ -1,17 +1,18 @@
+
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react"; // Import NextAuth signIn
+import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Scissors, ShieldCheck, UserPlus, Loader2 } from "lucide-react";
+import { Scissors, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useScissorsTransition } from "@/components/ScissorsTransition";
 
 export default function UnifiedAuth() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const { triggerTransition } = useScissorsTransition();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,7 +26,6 @@ export default function UnifiedAuth() {
 
     try {
       if (mode === "signup") {
-        // 1. Call your Signup API
         const res = await fetch("/api/auth/signup", {
           method: "POST",
           body: JSON.stringify({ name, email, password }),
@@ -36,7 +36,6 @@ export default function UnifiedAuth() {
         if (!res.ok) throw new Error(data.message || "Signup failed");
       }
 
-      // 2. Authenticate (Login) via NextAuth
       const result = await signIn("credentials", {
         redirect: false,
         email,
@@ -47,11 +46,10 @@ export default function UnifiedAuth() {
         throw new Error("Invalid credentials");
       }
 
-      router.push("/book");
-      router.refresh();
+      // Trigger the scissor cutting animation leading into /book
+      triggerTransition("/dashboard");
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
