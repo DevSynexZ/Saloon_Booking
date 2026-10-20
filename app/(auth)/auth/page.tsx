@@ -23,6 +23,7 @@ export default function UnifiedAuth() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
 
     try {
       if (mode === "signup") {
@@ -71,11 +72,24 @@ export default function UnifiedAuth() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {mode === "signup" && (
-            <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="text-zinc-500 text-[10px] uppercase tracking-widest ml-1">Full Name</label>
-              <input name="name" type="text" required placeholder="Mahi Shahriar" className="w-full bg-black/50 border border-zinc-800 text-white px-4 py-4 focus:outline-none focus:border-[#d4af37] transition-all" />
-            </div>
+            <>
+
+              <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-zinc-500 text-[10px] uppercase tracking-widest ml-1">Full Name</label>
+                <input name="name" type="text" required placeholder="Mahi Shahriar" className="w-full bg-black/50 border border-zinc-800 text-white px-4 py-4 focus:outline-none focus:border-[#d4af37] transition-all" />
+              </div>
+
+              <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-zinc-500 text-[10px] uppercase tracking-widest ml-1">Phone Number</label>
+                <input name="phone" type="tel" required placeholder="+8801700000000" className="w-full bg-black/50 border border-zinc-800 text-white px-4 py-4 focus:outline-none focus:border-[#d4af37] transition-all" />
+              </div>
+            </>
+
+
+
           )}
+
+
 
           <div className="space-y-1">
             <label className="text-zinc-500 text-[10px] uppercase tracking-widest ml-1">Email Address</label>
