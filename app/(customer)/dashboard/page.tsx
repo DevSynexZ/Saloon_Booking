@@ -235,6 +235,7 @@ export default function DashboardPage() {
           setLoading(false);
         });
     }
+    // console.log(dashboardData);
   }, [status, session, router]);
 
   if (loading || status === "loading" || session?.user?.role === "admin") {
@@ -310,6 +311,10 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between py-2 border-b border-zinc-800">
                   <span className="text-zinc-500">Account</span>
                   <span className="text-zinc-200">{dashboardData?.user?.email}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-zinc-800">
+                  <span className="text-zinc-500">Phone</span>
+                  <span className="text-zinc-200">{dashboardData?.user?.phone}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-zinc-800">
                   <span className="text-zinc-500">Membership</span>

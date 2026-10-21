@@ -161,6 +161,24 @@ export async function POST(req: Request) {
       const user = await User.findOne({ email: session.user.email }).lean();
       if (user) userId = user._id;
     }
+    else if(guestInfo?.phone) {
+      // Clean phone number to use as part of a unique placeholder email
+      const cleanPhone = guestInfo.phone.replace(/[^0-9]/g, "");
+      const guestEmail = `guest_${cleanPhone}@sailors.local`;
+
+      // Find if this guest already booked before, otherwise create a temporary user profile
+      let guestUser = await User.findOne({ phone: guestInfo.phone });
+      
+      if (!guestUser) {
+        guestUser = await User.create({
+          name: guestInfo.name,
+          phone: guestInfo.phone,
+          email: guestEmail,
+          password: Math.random().toString(36).slice(-8), // Dummy secure password
+        });
+      }
+      userId = guestUser._id;
+    }
 
     // If no logged in user, handle guest or throw error depending on your user model requirement
     if (!userId) {

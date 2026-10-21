@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     await dbConnect();
 
     // Fetch user and select strictly necessary fields
-    const user = await User.findOne({ email: session.user.email }).select("name email _id").lean();
+    const user = await User.findOne({ email: session.user.email }).select("name email _id phone").lean();
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -49,6 +49,7 @@ export async function GET(req: Request) {
       user: {
         name: user.name,
         email: user.email,
+        phone: user.phone,
       },
       upcomingSessions,
       pastSessions,

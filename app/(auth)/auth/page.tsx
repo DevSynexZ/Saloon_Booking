@@ -29,7 +29,7 @@ export default function UnifiedAuth() {
       if (mode === "signup") {
         const res = await fetch("/api/auth/signup", {
           method: "POST",
-          body: JSON.stringify({ name, email, password }),
+          body: JSON.stringify({ name, email, password,phone }),
           headers: { "Content-Type": "application/json" },
         });
 
